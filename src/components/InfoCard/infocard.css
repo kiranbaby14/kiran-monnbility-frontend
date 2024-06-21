@@ -1,0 +1,10 @@
+.card-flex {
+    display: flex;
+    justify-content: space-between;
+}
+
+.card-flex .children {
+    width: 9rem;
+    height: 4rem;
+    background-color: rgb(211, 204, 204);
+}
