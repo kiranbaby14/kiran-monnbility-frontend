@@ -5,12 +5,16 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { CoordinatesProvider } from './providers/CoordinatesContext';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <React.StrictMode>
+  <CoordinatesProvider>
     <App />
+  </CoordinatesProvider>
+
   // </React.StrictMode>
 );
 

@@ -1,8 +1,12 @@
 import Card from 'react-bootstrap/Card';
 
 import './infocard.css';
+import { useCoordinates } from '../../providers/CoordinatesContext';
 
 const InfoCard = () => {
+    const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
+
+
     return (
         <Card style={{
             width: '22rem', height: '30rem', position: 'fixed', margin: '50px 0 0 20px',
@@ -12,8 +16,7 @@ const InfoCard = () => {
                 <Card.Body>
                     <Card.Title>Card Title</Card.Title>
                     <Card.Text>
-                        Some quick example text to build on the card title and make up the
-                        bulk of the card's content.
+                       {faultCoordinates}
                     </Card.Text>
                 </Card.Body>
             </Card>

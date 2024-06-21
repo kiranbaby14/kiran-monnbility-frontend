@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from '!mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
 import { Marker, NavigationControl } from 'mapbox-gl';
 import './map.css'
+import { useCoordinates } from '../../providers/CoordinatesContext';
 
 mapboxgl.accessToken = `${process.env.REACT_APP_MAPBOX_API_TOKEN}`;
 
@@ -15,9 +16,7 @@ const Map = ({ children }) => {
   const [lat, setLat] = useState(51.53502865191151);
   const [zoom, setZoom] = useState(9);
 
-  const coordinates = [[-0.13814608966609365, 51.53502865191151],
-  [-0.13914608966609365, 51.83502865191151],
-  [-0.1414608966609365, 52]]
+  const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -36,26 +35,32 @@ const Map = ({ children }) => {
     });
 
 
+
+
     map.current.on('load', () => {
       // Add zoom and rotation controls to the map.
       map.current.addControl(new NavigationControl(), 'top-right');
 
       // Set marker options.
-      coordinates.forEach(coord => {
+      trainCoordinates.forEach(coord => {
         const el = document.createElement('div');
-        el.className = 'custom-marker'
+        if (JSON.stringify(coord) ===  JSON.stringify(faultCoordinates[0])) {
+          el.className = 'fault-marker'
+        }
+        else {
+          el.className = 'custom-marker'
+        }
 
         // Event listener for marker click
         el.addEventListener('click', () => {
-          el.style.backgroundColor = 'yellow';
+          el.style.backgroundColor = 'red';
         });
 
         markers.current.push(markers);
 
         const marker = new Marker(el).setLngLat(coord)
           .addTo(map.current);
-        
-        // marker.getElement.addEventListener('click', null);
+
       })
 
 
