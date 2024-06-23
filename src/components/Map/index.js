@@ -44,7 +44,8 @@ const Map = ({ children }) => {
       // Set marker options.
       trainCoordinates.forEach(coord => {
         const el = document.createElement('div');
-        if (JSON.stringify(coord) ===  JSON.stringify(faultCoordinates[0])) {
+
+        if (JSON.stringify(coord) === JSON.stringify(faultCoordinates[0])) {
           el.className = 'fault-marker'
         }
         else {
@@ -53,16 +54,19 @@ const Map = ({ children }) => {
 
         // Event listener for marker click
         el.addEventListener('click', () => {
-          el.style.backgroundColor = 'red';
+          markers.current.forEach((marker) => { // Make other markers to default color
+            marker.getElement().style.boxShadow = ""
+          })
+          el.style.boxShadow = "0 0 10px 5px #48abe0, 0 0 20px 7px #ffff, 0 0 25px 20px #ffff, 0 0 30px 25px #ffff";
         });
 
-        markers.current.push(markers);
 
         const marker = new Marker(el).setLngLat(coord)
           .addTo(map.current);
 
-      })
+        markers.current.push(marker);
 
+      })
 
     })
 
