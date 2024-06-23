@@ -41,6 +41,33 @@ const Map = ({ children }) => {
       // Add zoom and rotation controls to the map.
       map.current.addControl(new NavigationControl(), 'top-right');
 
+
+      map.current.addSource('route', {
+        'type': 'geojson',
+        'data': {
+          'type': 'Feature',
+          'properties': {},
+          'geometry': {
+            'type': 'LineString',
+            'coordinates': routeCoordinates
+          }
+        }
+      });
+
+      map.current.addLayer({
+        'id': 'route',
+        'type': 'line',
+        'source': 'route',
+        'layout': {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-color': 'yellow',
+          'line-width': 8
+        }
+      });
+
       // Set marker options.
       trainCoordinates.forEach(coord => {
         const el = document.createElement('div');
@@ -54,7 +81,7 @@ const Map = ({ children }) => {
 
         // Event listener for marker click
         el.addEventListener('click', () => {
-          markers.current.forEach((marker) => { // Make other markers to default color
+          markers.current.forEach((marker) => { // Make other markers to default state
             marker.getElement().style.boxShadow = ""
           })
           el.style.boxShadow = "0 0 10px 5px #48abe0, 0 0 20px 7px #ffff, 0 0 25px 20px #ffff, 0 0 30px 25px #ffff";
