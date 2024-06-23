@@ -4,7 +4,7 @@ import { Container } from 'react-bootstrap';
 const NavbarComp = () => {
   return (
     <Navbar expand="lg" className="bg-body-tertiary">
-      <Container>
+      <Container fluid>
         <Navbar.Brand href="#home">Moonbility</Navbar.Brand>
       </Container>
     </Navbar>
