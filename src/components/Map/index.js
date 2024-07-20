@@ -41,7 +41,7 @@ const Map = ({ children }) => {
       // Add zoom and rotation controls to the map.
       map.current.addControl(new NavigationControl(), 'top-right');
 
-
+      console.log(routeCoordinates);
       map.current.addSource('route', {
         'type': 'geojson',
         'data': {
@@ -64,7 +64,7 @@ const Map = ({ children }) => {
         },
         'paint': {
           'line-color': 'yellow',
-          'line-width': 8
+          'line-width': 0.8
         }
       });
 
