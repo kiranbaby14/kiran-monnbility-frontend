@@ -21,12 +21,6 @@ const Map = ({ children }) => {
   const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
 
   const handleMapLoad = () => {
-    // map.current = new mapboxgl.Map({
-    //   container: mapContainer.current,
-    //   style: 'mapbox://styles/kiranbaby14/clxoh9fe500kr01r2dbeef4wu',
-    //   center: [lng, lat],
-    //   zoom: zoom
-    // });
     if (mapRef.current) {
       const map = mapRef.current.getMap();
 
@@ -52,19 +46,31 @@ const Map = ({ children }) => {
         }
       });
 
+      // Add a circle layer to display the individual points
       map.addLayer({
-        'id': 'route',
-        'type': 'line',
+        'id': 'route-points',
+        'type': 'circle',
         'source': 'route',
-        'layout': {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
         'paint': {
-          'line-color': 'yellow',
-          'line-width': 0.8
+          'circle-radius': 5,
+          'circle-color': 'yellow'
         }
       });
+
+      // Add a line layer to connect the points
+      // map.addLayer({
+      //   'id': 'route',
+      //   'type': 'line',
+      //   'source': 'route',
+      //   'layout': {
+      //     'line-join': 'round',
+      //     'line-cap': 'round'
+      //   },
+      //   'paint': {
+      //     'line-color': 'blue',
+      //     'line-width': 2
+      //   }
+      // });
 
       // Set marker options.
       trainCoordinates.forEach(coord => {

@@ -32,6 +32,7 @@ const getRouteCoords = async () => {
                 // Define the input coordinates (easting, northing)
                 // Make sure these coordinates are in the British National Grid format
                 const inputCoordinates = result.value.coordinates;
+                console.log(result);
 
                 // Convert the coordinates to latitude and longitude
                 const [longitude, latitude] = proj4(sourceProjection, destProjection, inputCoordinates);
@@ -50,7 +51,7 @@ const getRouteCoords = async () => {
     // [327208.1969999997, 324261.3100000005],
     // [446258.375, 409779.28500000015]]
 
-    return routeCoords.slice(0, 10)
+    return routeCoords
 }
 
 const getTrainCoords = async () => {
