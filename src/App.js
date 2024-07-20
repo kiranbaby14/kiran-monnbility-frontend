@@ -10,7 +10,6 @@ function App() {
       <Map >
         <InfoCard />
       </Map>
-
     </>
   );
 }

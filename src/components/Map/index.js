@@ -3,6 +3,8 @@ import mapboxgl from '!mapbox-gl'; // eslint-disable-line import/no-webpack-load
 import { Marker, NavigationControl } from 'mapbox-gl';
 import './map.css'
 import { useCoordinates } from '../../providers/CoordinatesContext';
+import ReactMapGL from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 mapboxgl.accessToken = `${process.env.REACT_APP_MAPBOX_API_TOKEN}`;
 
@@ -11,38 +13,34 @@ const Map = ({ children }) => {
   const markers = useRef([]);
 
   const mapContainer = useRef(null);
-  const map = useRef(null);
+  const mapRef = useRef(null);
   const [lng, setLng] = useState(-0.13814608966609365);
   const [lat, setLat] = useState(51.53502865191151);
   const [zoom, setZoom] = useState(9);
 
   const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
 
-  useEffect(() => {
-    if (map.current) return; // initialize map only once
+  const handleMapLoad = () => {
+    // map.current = new mapboxgl.Map({
+    //   container: mapContainer.current,
+    //   style: 'mapbox://styles/kiranbaby14/clxoh9fe500kr01r2dbeef4wu',
+    //   center: [lng, lat],
+    //   zoom: zoom
+    // });
+    if (mapRef.current) {
+      const map = mapRef.current.getMap();
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/kiranbaby14/clxoh9fe500kr01r2dbeef4wu',
-      center: [lng, lat],
-      zoom: zoom
-    });
+      map.on('move', () => {
+        setLng(map.getCenter().lng.toFixed(4));
+        setLat(map.getCenter().lat.toFixed(4));
+        setZoom(map.getZoom().toFixed(2));
+      });
 
-    map.current.on('move', () => {
-      setLng(map.current.getCenter().lng.toFixed(4));
-      setLat(map.current.getCenter().lat.toFixed(4));
-      setZoom(map.current.getZoom().toFixed(2));
-    });
-
-
-
-
-    map.current.on('load', () => {
       // Add zoom and rotation controls to the map.
-      map.current.addControl(new NavigationControl(), 'top-right');
+      map.addControl(new NavigationControl(), 'top-right');
 
-      console.log(routeCoordinates);
-      map.current.addSource('route', {
+      // console.log(routeCoordinates);
+      map.addSource('route', {
         'type': 'geojson',
         'data': {
           'type': 'Feature',
@@ -54,7 +52,7 @@ const Map = ({ children }) => {
         }
       });
 
-      map.current.addLayer({
+      map.addLayer({
         'id': 'route',
         'type': 'line',
         'source': 'route',
@@ -89,23 +87,31 @@ const Map = ({ children }) => {
 
 
         const marker = new Marker(el).setLngLat(coord)
-          .addTo(map.current);
+          .addTo(map);
 
         markers.current.push(marker);
 
       })
-
-    })
-
-
-
-  }, []);
-
+    }
+  }
 
   return (
     <div style={{ zIndex: 10 }}>
-      <div ref={mapContainer} className="map-container" >
-        {children}
+      <div className="map-container" >
+        <ReactMapGL
+          ref={mapRef}
+          mapboxAccessToken={`${process.env.REACT_APP_MAPBOX_API_TOKEN}`}
+          initialViewState={{
+            longitude: lng,
+            latitude: lat,
+            zoom: zoom
+          }}
+          mapStyle='mapbox://styles/kiranbaby14/clxoh9fe500kr01r2dbeef4wu'
+          onLoad={handleMapLoad}
+
+        >
+          {children}
+        </ReactMapGL>
       </div>
     </div>
   );
