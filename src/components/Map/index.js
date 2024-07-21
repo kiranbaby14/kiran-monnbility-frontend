@@ -5,6 +5,9 @@ import './map.css'
 import { useCoordinates } from '../../providers/CoordinatesContext';
 import ReactMapGL from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import L from 'leaflet'
+import shp from 'shpjs';
+
 
 mapboxgl.accessToken = `${process.env.REACT_APP_MAPBOX_API_TOKEN}`;
 
@@ -20,6 +23,22 @@ const Map = ({ children }) => {
 
   const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
 
+  const fetchGeoPackage = async () => {
+    try {
+
+
+      const geojson = await shp("/NetworkWaymarks.zip");
+      console.log(geojson);
+    } catch (error) {
+      console.error('Error fetching or processing GeoPackage:', error);
+    }
+  }
+
+  useEffect(() => {
+    // Fetch and process the GeoPackage
+    fetchGeoPackage();
+  }, [])
+
   const handleMapLoad = () => {
     if (mapRef.current) {
       const map = mapRef.current.getMap();
@@ -30,32 +49,64 @@ const Map = ({ children }) => {
         setZoom(map.getZoom().toFixed(2));
       });
 
+      map.setConfigProperty('basemap', 'lightPreset', 'day');
+
       // Add zoom and rotation controls to the map.
       map.addControl(new NavigationControl(), 'top-right');
 
-      // console.log(routeCoordinates);
       map.addSource('route', {
-        'type': 'geojson',
-        'data': {
-          'type': 'Feature',
-          'properties': {},
-          'geometry': {
-            'type': 'LineString',
-            'coordinates': routeCoordinates
-          }
+        type: 'geojson',
+        data: "/networkLink-geojson.geojson"
+      });
+
+      map.addLayer({
+        id: 'route-layer',
+        type: 'line',
+        source: 'route',
+        'layout': {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-color': 'blue',
+          'line-width': 2
         }
       });
 
-      // Add a circle layer to display the individual points
-      map.addLayer({
-        'id': 'route-points',
-        'type': 'circle',
-        'source': 'route',
-        'paint': {
-          'circle-radius': 5,
-          'circle-color': 'yellow'
-        }
-      });
+      // console.log(routeCoordinates);
+      // map.addSource('route', {
+      //   'type': 'geojson',
+      //   'data': {
+      //     'type': 'Feature',
+      //     'properties': {},
+      //     'geometry': {
+      //       'type': 'LineString',
+      //       'coordinates': routeCoordinates
+      //     }
+      //   }
+      // });
+
+      // // Add a circle layer to display the individual points
+      // map.addLayer({
+      //   'id': 'route-points',
+      //   'type': 'circle',
+      //   'source': 'route',
+      //   'paint': {
+      //     'circle-radius': 5,
+      //     'circle-color': 'yellow'
+      //   }
+      // });
+
+      // map.addLayer({
+      //   id: 'points-of-interest',
+      //   slot: 'middle',
+      //   source: {
+      //     type: 'vector',
+      //     url: 'mapbox://mapbox.mapbox-streets-v8'
+      //   },
+      //   'source-layer': 'poi_label',
+      //   type: 'circle'
+      // });
 
       // Add a line layer to connect the points
       // map.addLayer({
@@ -112,7 +163,7 @@ const Map = ({ children }) => {
             latitude: lat,
             zoom: zoom
           }}
-          mapStyle='mapbox://styles/kiranbaby14/clxoh9fe500kr01r2dbeef4wu'
+          mapStyle='mapbox://styles/mapbox/standard'
           onLoad={handleMapLoad}
 
         >
