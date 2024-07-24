@@ -7,7 +7,7 @@ import ReactMapGL from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import L from 'leaflet'
 import shp from 'shpjs';
-
+import { Threebox } from 'threebox-plugin'; 
 
 mapboxgl.accessToken = `${process.env.REACT_APP_MAPBOX_API_TOKEN}`;
 
@@ -17,9 +17,9 @@ const Map = ({ children }) => {
 
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
-  const [lng, setLng] = useState(-0.13814608966609365);
+  const [lng, setLng] = useState(-0.14814608966609365);
   const [lat, setLat] = useState(51.53502865191151);
-  const [zoom, setZoom] = useState(9);
+  const [zoom, setZoom] = useState(90);
 
   const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
 
@@ -36,7 +36,7 @@ const Map = ({ children }) => {
 
   useEffect(() => {
     // Fetch and process the GeoPackage
-    fetchGeoPackage();
+    // fetchGeoPackage();
   }, [])
 
   const handleMapLoad = () => {
@@ -56,7 +56,7 @@ const Map = ({ children }) => {
 
       map.addSource('route', {
         type: 'geojson',
-        data: "/networkLink-geojson.geojson"
+        data: "/network-links.geojson"
       });
 
       map.addLayer({
@@ -69,8 +69,18 @@ const Map = ({ children }) => {
         },
         'paint': {
           'line-color': 'blue',
-          'line-width': 2
-        }
+          'line-width': 4
+        },
+        // 'paint': {
+        //   'line-color': [
+        //     'match',
+        //     ['get', 'ELR'],
+        //     'MLN3', 'red',
+        //     'blue'
+
+        //   ],
+        //   'line-width': 2
+        // }
       });
 
       // console.log(routeCoordinates);
@@ -110,7 +120,7 @@ const Map = ({ children }) => {
 
       // Add a line layer to connect the points
       // map.addLayer({
-      //   'id': 'route',
+      //   'id': 'route-lines',
       //   'type': 'line',
       //   'source': 'route',
       //   'layout': {
@@ -122,6 +132,39 @@ const Map = ({ children }) => {
       //     'line-width': 2
       //   }
       // });
+
+      let truck;
+
+      map.addLayer({
+				id: 'custom_layer',
+				type: 'custom',
+				renderingMode: '3d',
+				onAdd: function (map, mbxContext) {
+
+					window.tb = new Threebox(
+						map,
+						mbxContext,
+						{ defaultLights: true }
+					);
+
+					var options = {
+						obj: '/truck.glb',
+						type: 'gltf',
+						scale: 10,
+						units: 'meters',
+						rotation: { x: 90, y: 0, z: 0 } //default rotation
+					}
+
+					window.tb.loadObj(options, function (model) {
+						truck = model.setCoords([lng, lat]);
+						window.tb.add(truck);
+					})
+
+				},
+				render: function (gl, matrix) {
+					window.tb.update();
+				}
+      });
 
       // Set marker options.
       trainCoordinates.forEach(coord => {
@@ -164,6 +207,7 @@ const Map = ({ children }) => {
             zoom: zoom
           }}
           mapStyle='mapbox://styles/mapbox/standard'
+          projection='globe'
           onLoad={handleMapLoad}
 
         >
