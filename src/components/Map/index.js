@@ -8,6 +8,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import L, { geoJson } from 'leaflet'
 import shp from 'shpjs';
 import { Threebox } from 'threebox-plugin';
+import * as turf from '@turf/turf'
 
 mapboxgl.accessToken = `${process.env.REACT_APP_MAPBOX_API_TOKEN}`;
 
@@ -20,14 +21,72 @@ const Map = ({ children }) => {
   const mapRef = useRef(null);
   const [lng, setLng] = useState(-0.14814608966609365);
   const [lat, setLat] = useState(51.53502865191151);
-  const [zoom, setZoom] = useState(90);
+  const [zoom, setZoom] = useState(20);
   const [geoJson, setGeoJson] = useState()
 
   const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
 
+  // San Francisco
+  const origin = [-0.14814608966609365, 51.53502865191151];
+
+  // Washington DC
+  const destination = [-0.14814608966609365, 51.55502865191151];
+
+  // A simple line from origin to destination.
+  const route = {
+    'type': 'FeatureCollection',
+    'features': [
+      {
+        'type': 'Feature',
+        'geometry': {
+          'type': 'LineString',
+          'coordinates': [origin, destination]
+        }
+      }
+    ]
+  };
+
+  // A single point that animates along the route.
+  // Coordinates are initially set to origin.
+  const point = {
+    'type': 'FeatureCollection',
+    'features': [
+      {
+        'type': 'Feature',
+        'properties': {},
+        'geometry': {
+          'type': 'Point',
+          'coordinates': origin
+        }
+      }
+    ]
+  };
+
+  // Calculate the distance in kilometers between route start/end point.
+  const lineDistance = turf.length(route.features[0]);
+
+  const arc = [];
+
+  // Number of steps to use in the arc and animation, more steps means
+  // a smoother arc and animation, but too many steps will result in a
+  // low frame rate
+  const steps = 5000;
+
+  // Draw an arc between the `origin` & `destination` of the two points
+  for (let i = 0; i < lineDistance; i += lineDistance / steps) {
+    const segment = turf.along(route.features[0], i);
+    arc.push(segment.geometry.coordinates);
+  }
+
+  // Update the route with calculated arc coordinates
+  route.features[0].geometry.coordinates = arc;
+
+  // Used to increment the value of the point measurement against the route.
+  let counter = 0;
+
   const fetchGeoPackage = async () => {
     try {
-      
+
       const geo = await shp("/NetworkLinks.zip")
       setGeoJson(geo)
     } catch (error) {
@@ -44,16 +103,58 @@ const Map = ({ children }) => {
     if (mapRef.current) {
       const map = mapRef.current.getMap();
 
-      map.on('move', () => {
-        setLng(map.getCenter().lng.toFixed(4));
-        setLat(map.getCenter().lat.toFixed(4));
-        setZoom(map.getZoom().toFixed(2));
-      });
+      // map.on('move', () => {
+      //   setLng(map.getCenter().lng.toFixed(4));
+      //   setLat(map.getCenter().lat.toFixed(4));
+      //   setZoom(map.getZoom().toFixed(2));
+      // });
 
       map.setConfigProperty('basemap', 'lightPreset', 'day');
 
       // Add zoom and rotation controls to the map.
       map.addControl(new NavigationControl(), 'top-right');
+
+      // Add a source and layer displaying a point which will be animated in a circle.
+      map.addSource('route1', {
+        'type': 'geojson',
+        'data': route
+      });
+
+      map.addSource('point', {
+        'type': 'geojson',
+        'data': point
+      });
+
+      map.addLayer({
+        'id': 'route1',
+        'source': 'route1',
+        'type': 'line',
+        'paint': {
+          'line-width': 10,
+          'line-color': '#007cbf'
+        }
+      });
+
+      function animateTruck() {
+        if (counter >= steps) {
+            return;
+        }
+    
+        truck.setCoords(route.features[0].geometry.coordinates[counter]);
+    
+        // Calculate bearing for truck rotation
+        // if (counter + 1 < steps) {
+        //     var bearing = turf.bearing(
+        //         turf.point(route.features[0].geometry.coordinates[counter]),
+        //         turf.point(route.features[0].geometry.coordinates[counter + 1])
+        //     );
+        //     truck.setRotation({ x: 90, y: -90, z: bearing });
+        // }
+    
+        counter++;
+        requestAnimationFrame(animateTruck);
+    }
+
 
       map.addSource('route', {
         type: 'geojson',
@@ -138,7 +239,9 @@ const Map = ({ children }) => {
 
       map.addLayer({
         id: 'custom_layer',
+        source: 'point',
         type: 'custom',
+
         renderingMode: '3d',
         onAdd: function (map, mbxContext) {
 
@@ -159,6 +262,7 @@ const Map = ({ children }) => {
           window.tb.loadObj(options, function (model) {
             truck = model.setCoords([lng, lat]);
             window.tb.add(truck);
+            animateTruck();
           })
 
         },
@@ -191,8 +295,8 @@ const Map = ({ children }) => {
           .addTo(map);
 
         markers.current.push(marker);
-
       })
+
     }
   }
 
@@ -210,7 +314,6 @@ const Map = ({ children }) => {
           mapStyle='mapbox://styles/mapbox/standard'
           projection='globe'
           onLoad={handleMapLoad}
-
         >
           {children}
         </ReactMapGL>
