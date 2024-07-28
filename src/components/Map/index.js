@@ -5,11 +5,12 @@ import './map.css'
 import { useCoordinates } from '../../providers/CoordinatesContext';
 import ReactMapGL from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import L from 'leaflet'
+import L, { geoJson } from 'leaflet'
 import shp from 'shpjs';
-import { Threebox } from 'threebox-plugin'; 
+import { Threebox } from 'threebox-plugin';
 
 mapboxgl.accessToken = `${process.env.REACT_APP_MAPBOX_API_TOKEN}`;
+
 
 const Map = ({ children }) => {
   // Reference to store marker elements
@@ -20,15 +21,15 @@ const Map = ({ children }) => {
   const [lng, setLng] = useState(-0.14814608966609365);
   const [lat, setLat] = useState(51.53502865191151);
   const [zoom, setZoom] = useState(90);
+  const [geoJson, setGeoJson] = useState()
 
   const { routeCoordinates, trainCoordinates, faultCoordinates } = useCoordinates()
 
   const fetchGeoPackage = async () => {
     try {
-
-
-      const geojson = await shp("/NetworkWaymarks.zip");
-      console.log(geojson);
+      
+      const geo = await shp("/NetworkLinks.zip")
+      setGeoJson(geo)
     } catch (error) {
       console.error('Error fetching or processing GeoPackage:', error);
     }
@@ -56,7 +57,7 @@ const Map = ({ children }) => {
 
       map.addSource('route', {
         type: 'geojson',
-        data: "/network-links.geojson"
+        data: '/network-links.geojson'
       });
 
       map.addLayer({
@@ -136,34 +137,34 @@ const Map = ({ children }) => {
       let truck;
 
       map.addLayer({
-				id: 'custom_layer',
-				type: 'custom',
-				renderingMode: '3d',
-				onAdd: function (map, mbxContext) {
+        id: 'custom_layer',
+        type: 'custom',
+        renderingMode: '3d',
+        onAdd: function (map, mbxContext) {
 
-					window.tb = new Threebox(
-						map,
-						mbxContext,
-						{ defaultLights: true }
-					);
+          window.tb = new Threebox(
+            map,
+            mbxContext,
+            { defaultLights: true }
+          );
 
-					var options = {
-						obj: '/truck.glb',
-						type: 'gltf',
-						scale: 10,
-						units: 'meters',
-						rotation: { x: 90, y: 0, z: 0 } //default rotation
-					}
+          var options = {
+            obj: '/truck.glb',
+            type: 'gltf',
+            scale: 10,
+            units: 'meters',
+            rotation: { x: 90, y: -90, z: 0 } //default rotation
+          }
 
-					window.tb.loadObj(options, function (model) {
-						truck = model.setCoords([lng, lat]);
-						window.tb.add(truck);
-					})
+          window.tb.loadObj(options, function (model) {
+            truck = model.setCoords([lng, lat]);
+            window.tb.add(truck);
+          })
 
-				},
-				render: function (gl, matrix) {
-					window.tb.update();
-				}
+        },
+        render: function (gl, matrix) {
+          window.tb.update();
+        }
       });
 
       // Set marker options.
